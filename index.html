@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#85201f">
+<title>Clientes Carnicería</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap"></noscript>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+:root { color-scheme: light; }
+/* Layout: banda roja de mostrador arriba con marca y pestañas, cuatro contadores que se montan sobre la banda, y debajo la vista activa. La ficha del cliente es un ticket con talón de visitas. */
+:root {
+  --bg: #eceff0;
+  --surface: #fafbfb;
+  --ink: #1c2326;
+  --muted: #5a676d;
+  --line: #d0d7da;
+  --stub: #f1f3f4;
+  --accent: #9b2c2f;
+  --accent-ink: #ffffff;
+  --band: #85201f;
+  --band-ink: #ffffff;
+  --ok: #1d6847;
+  --ok-bg: #dff0e6;
+  --warn: #8a5a00;
+  --warn-bg: #f8ecd2;
+  --danger: #a3262a;
+  --f-display: "Alfa Slab One", Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111517; --surface: #1b2225; --ink: #e8edef; --muted: #95a3a9; --line: #2f3a3e; --stub: #172023;
+    --accent: #e4635f; --accent-ink: #1b0c0c; --band: #4a1618; --band-ink: #fbe9e7;
+    --ok: #74d2a2; --ok-bg: #16302a; --warn: #e8bd68; --warn-bg: #33290f; --danger: #f08581;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111517; --surface: #1b2225; --ink: #e8edef; --muted: #95a3a9; --line: #2f3a3e; --stub: #172023;
+  --accent: #e4635f; --accent-ink: #1b0c0c; --band: #4a1618; --band-ink: #fbe9e7;
+  --ok: #74d2a2; --ok-bg: #16302a; --warn: #e8bd68; --warn-bg: #33290f; --danger: #f08581;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+img { max-width: 100%; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.5 var(--f-body); }
+.inner {
+  max-width: 980px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.band {
+  background: var(--band) repeating-linear-gradient(135deg, rgba(255,255,255,.045) 0 2px, transparent 2px 14px);
+  color: var(--band-ink);
+  padding-block: calc(26px + env(safe-area-inset-top, 0px)) 62px;
+}
+.band .inner { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px; }
+.brand { min-width: 0; }
+.brand h1 { margin: 0; font: 400 clamp(2.1rem, 8vw, 3.2rem)/.95 var(--f-display); letter-spacing: .01em; }
+.brand p { margin: 10px 0 0; font-size: .78rem; letter-spacing: .2em; text-transform: uppercase; opacity: .8; }
+nav { display: flex; gap: 4px; padding: 4px; background: rgba(0,0,0,.28); border-radius: 12px; }
+nav button {
+  font: 600 .92rem var(--f-body); color: rgba(255,255,255,.82); background: transparent; border: 0;
+  padding: 9px 15px; border-radius: 9px; cursor: pointer; min-height: 42px;
+}
+nav button[aria-selected="true"] { background: var(--surface); color: var(--ink); }
+nav button:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible, .sort:focus-visible, .chipbtn:focus-visible, .rowbtn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+nav button:focus-visible { outline-color: #fff; }
+main.inner { margin: -38px auto 0; display: flex; flex-direction: column; gap: 18px; padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+#stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.tile b { display: block; font: 600 clamp(1.5rem, 5vw, 2.1rem)/1.1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.tile span { display: block; margin-top: 4px; font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+label { display: block; font-size: .76rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+input, textarea {
+  width: 100%; font: 400 1rem var(--f-body); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; min-height: 46px;
+}
+textarea { min-height: 84px; resize: vertical; }
+input[readonly] { color: var(--muted); }
+.search-row { display: flex; gap: 10px; }
+.search-row input { font: 600 1.5rem var(--f-mono); letter-spacing: .04em; min-height: 60px; min-width: 0; }
+.hint { margin: 8px 0 0; font-size: .85rem; color: var(--muted); }
+.btn {
+  font: 600 .95rem var(--f-body); border-radius: 8px; padding: 11px 18px; min-height: 46px; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent);
+  text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.small { min-height: 36px; padding: 6px 12px; font-size: .85rem; }
+.btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.btn[disabled] { opacity: .55; cursor: default; }
+.search-row .btn { padding-inline: 24px; }
+#result { display: flex; flex-direction: column; gap: 14px; }
+#result:empty { display: none; }
+.chip { display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; }
+.chip.ok { background: var(--ok-bg); color: var(--ok); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+
+/* Ticket */
+.ticket { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 230px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.ticket .main { padding: 22px; min-width: 0; }
+.ticket h2 { margin: 12px 0 4px; font: 600 1.6rem/1.2 var(--f-body); text-wrap: balance; }
+.ticket .tel { font: 600 1.35rem var(--f-mono); letter-spacing: .03em; color: var(--accent); margin: 0 0 16px; }
+.stub { position: relative; border-left: 2px dashed var(--line); background: var(--stub); padding: 22px; display: flex; flex-direction: column; justify-content: center; gap: 4px; text-align: center; }
+.stub::before, .stub::after { content: ""; position: absolute; left: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); }
+.stub::before { top: -11px; }
+.stub::after { bottom: -11px; }
+.stub .lab { font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.stub .big { font: 600 3.2rem/1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.stub .last { font-size: .85rem; color: var(--muted); margin-bottom: 10px; }
+dl { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; }
+dt { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 2px 0 0; font-size: 1.02rem; overflow-wrap: anywhere; white-space: pre-wrap; }
+dd.mono, td.mono { font-family: var(--f-mono); font-weight: 500; }
+.span2 { grid-column: 1 / -1; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.nf p { margin: 12px 0 0; }
+.nf .num { font: 600 1.3rem var(--f-mono); }
+
+/* Lista de coincidencias */
+.matches { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.matches li + li { border-top: 1px solid var(--line); }
+.rowbtn { width: 100%; text-align: left; background: transparent; border: 0; color: inherit; font: inherit; padding: 12px 6px; cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: space-between; align-items: baseline; border-radius: 8px; }
+.rowbtn:hover { background: var(--stub); }
+.rowbtn strong { font-weight: 600; }
+.rowbtn .mono { font: 500 .95rem var(--f-mono); color: var(--muted); }
+.rowbtn small { color: var(--muted); font-size: .85rem; flex-basis: 100%; }
+
+form.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+form.grid h2 { grid-column: 1 / -1; margin: 0; font: 600 1.2rem var(--f-body); }
+.err { grid-column: 1 / -1; margin: 0; color: var(--danger); font-size: .9rem; }
+.msg { min-height: 1.4em; margin: 0; font-size: .92rem; font-weight: 500; color: var(--ok); }
+
+/* Tabla */
+.tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.tools h2, .card h2 { margin: 0; font: 600 1.15rem var(--f-body); }
+.tools .right { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.tools input { width: 260px; max-width: 100%; min-height: 40px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.chipbtn { font: 500 .85rem var(--f-body); background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.chipbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; min-width: 860px; font-size: .92rem; }
+th { text-align: left; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 4px 8px; border-bottom: 1px solid var(--line); background: var(--bg); white-space: nowrap; }
+th .sort { font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; background: transparent; border: 0; cursor: pointer; padding: 8px 4px; }
+th[aria-sort] .sort { color: var(--ink); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td:nth-child(1) { min-width: 190px; }
+td:nth-child(3) { min-width: 170px; }
+td.nowrap { white-space: nowrap; }
+td.num { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+td.acts { white-space: nowrap; text-align: right; }
+td.acts .btn + .btn, td.acts span + .btn { margin-left: 6px; }
+.empty { padding: 26px 16px; text-align: center; color: var(--muted); }
+
+/* Resumen */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; min-width: 0; }
+.card.wide { grid-column: 1 / -1; }
+.card h2 { margin-bottom: 14px; }
+.bars, .toplist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.bars li { display: grid; grid-template-columns: minmax(80px, 150px) minmax(0, 1fr) 34px; align-items: center; gap: 12px; }
+.bars .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bars .bar { height: 14px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.bars .bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.bars b { font: 600 .95rem var(--f-mono); text-align: right; }
+.toplist li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.toplist li:last-child { border-bottom: 0; padding-bottom: 0; }
+.toplist small { display: block; color: var(--muted); }
+.toplist b { font: 600 1.05rem var(--f-mono); white-space: nowrap; }
+.msgbox h2 { margin: 0 0 14px; font: 600 1.15rem var(--f-body); }
+.dest { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 16px; }
+.dest .lab { font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.dest strong { font: 600 1.3rem var(--f-mono); color: var(--accent); }
+.dest input { width: 190px; font: 600 1.1rem var(--f-mono); min-height: 40px; }
+.cuts { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 14px; }
+.msgbox textarea { min-height: 130px; font: 400 .95rem/1.5 var(--f-mono); }
+.hint.tight { grid-column: 1 / -1; margin: 0; }
+footer { font-size: .8rem; color: var(--muted); }
+[hidden] { display: none !important; }
+@media (max-width: 700px) {
+  #stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ticket { grid-template-columns: 1fr; }
+  .stub { border-left: 0; border-top: 2px dashed var(--line); }
+  .stub::before, .stub::after { top: -11px; bottom: auto; left: auto; }
+  .stub::before { left: -11px; }
+  .stub::after { right: -11px; }
+}
+@media (max-width: 520px) {
+  dl, form.grid { grid-template-columns: 1fr; }
+  .search-row { flex-direction: column; }
+  .tools input { width: 100%; }
+  .bars li { grid-template-columns: minmax(70px, 110px) minmax(0, 1fr) 30px; gap: 8px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  #result > * { animation: rise .2s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+</style>
+</head>
+<body>
+
+<div class="band">
+  <div class="inner">
+    <div class="brand">
+      <h1>Carnicería</h1>
+      <p>Directorio de clientes</p>
+    </div>
+    <nav role="tablist" aria-label="Secciones">
+      <button role="tab" id="tab-buscar" data-view="buscar" aria-selected="true" aria-controls="view-buscar">Buscar</button>
+      <button role="tab" id="tab-todos" data-view="todos" aria-selected="false" aria-controls="view-todos">Todos <span id="count">(…)</span></button>
+      <button role="tab" id="tab-resumen" data-view="resumen" aria-selected="false" aria-controls="view-resumen">Resumen</button>
+    </nav>
+  </div>
+</div>
+
+<main class="inner">
+  <div id="stats" aria-label="Contadores"></div>
+  <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+  <section id="view-buscar" role="tabpanel" aria-labelledby="tab-buscar" style="display:flex;flex-direction:column;gap:16px">
+    <form class="panel" id="search-form" autocomplete="off">
+      <label for="phone">Teléfono del cliente</label>
+      <div class="search-row">
+        <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="667 000 0000" maxlength="40" aria-describedby="phone-hint">
+        <button class="btn" type="submit">Buscar</button>
+      </div>
+      <p class="hint" id="phone-hint">Escribe los 10 dígitos y aparece el cliente. También puedes escribir parte del número o del nombre.</p>
+    </form>
+    <div id="result"></div>
+  </section>
+
+  <section id="view-todos" class="panel" role="tabpanel" aria-labelledby="tab-todos" hidden>
+    <div class="tools">
+      <h2>Base de datos de clientes</h2>
+      <div class="right">
+        <input id="filter" type="search" placeholder="Filtrar por nombre, calle, teléfono…" aria-label="Filtrar clientes">
+        <button class="btn ghost small" id="export" type="button">Exportar a Excel</button><button class="btn ghost small" id="backup" type="button">Respaldo</button><button class="btn ghost small" id="restore" type="button">Restaurar</button><input id="restore-file" type="file" accept="application/json,.json" hidden>
+      </div>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Filtrar por colonia"></div>
+    <div class="tablewrap" id="table-box"></div>
+  </section>
+
+  <section id="view-resumen" role="tabpanel" aria-labelledby="tab-resumen" hidden>
+    <div class="cards" id="resumen-box"></div>
+  </section>
+
+  <footer id="source"></footer></main>
+
+<script>
+(function () {
+  var SEED = [
+    { tel: "6671234501", nombre: "María Guadalupe Soto Ibarra", calle: "Calle Río Presidio 218", colonia: "Tres Ríos", cp: "80020", notas: "Compra arrachera y costilla los viernes. Paga en efectivo.", creado: "2026-09-14T17:00:00.000Z", visitas: 9, ultima: "2026-10-19T20:00:00.000Z" },
+    { tel: "6672345602", nombre: "José Luis Armenta Beltrán", calle: "Blvd. Emiliano Zapata 1530", colonia: "Las Quintas", cp: "80060", notas: "Pedidos grandes para carne asada de fin de semana.", creado: "2026-09-29T17:00:00.000Z", visitas: 6, ultima: "2026-10-17T19:00:00.000Z" },
+    { tel: "6673456703", nombre: "Claudia Patricia Ochoa Verdugo", calle: "Calle Mariano Escobedo 457", colonia: "Centro", cp: "80000", notas: "Prefiere el corte delgado. Pide molida de res sin grasa.", creado: "2026-10-08T17:00:00.000Z", visitas: 4, ultima: "2026-10-18T16:00:00.000Z" },
+    { tel: "6674567804", nombre: "Ramón Esteban Lugo Félix", calle: "Calle Pedro Anaya 892", colonia: "Chapultepec", cp: "80040", notas: "Restaurante familiar. Pide pollo entero y chorizo.", creado: "2026-10-15T17:00:00.000Z", visitas: 2, ultima: "2026-10-16T18:00:00.000Z" },
+    { tel: "6675678905", nombre: "Sofía Alejandra Rojas Quintero", calle: "Calle Antonio Rosales 305", colonia: "Tres Ríos", cp: "80020", notas: "", creado: "2026-10-19T17:00:00.000Z", visitas: 0, ultima: "" }
+  ];
+  var LS_KEY = "carniceria-clientes-v2";
+  var LS_DEST = "carniceria-destino-v1";
+  var CIUDAD = "Culiacán, Sinaloa";
+  var DEST_DEFAULT = "6677975519";
+  /* Colonias de Culiacán con su código postal (listados públicos de SEPOMEX). */
+  var COLS = ("Centro|80000;Universitaria|80013;Obrero Campesino|80013;Ciudad Universitaria|80013;Villa Universidad|80010;Fresnos|80010;6 de Enero|80010;Arboledas|80010;Ignacio Allende|80010;Vicente Lombardo Toledano|80010;" +
+    "Buena Vista|80014;Rosario Uzarraga|80014;Maralago|80014;Zona Dorada|80014;Los Ángeles|80014;Floresta|80014;Lomas de Tamazula|80014;Agrarista Mexicana|80014;Nueva Galaxia|80014;Las Glorias|80014;" +
+    "Rubén Jaramillo|80015;Lomas del Magisterio|80015;Residencial Hacienda|80015;Lomas de San Jerónimo|80015;Villa del Sol|80015;Grecia|80015;Campestre|80015;Solidaridad|80015;" +
+    "Interlomas|80016;Las Américas|80016;Lomas del Sol|80016;Juan de Dios Bátiz|80016;Lomas del Pedregal|80016;16 de Septiembre|80016;El Mirador|80017;Jesús Valdez Aldana|80017;Montesierra|80017;" +
+    "Bosques del Álamo|80018;Los Alamitos|80018;Lirios del Río|80018;Las Cucas|80018;Alameda|80019;Rotarismo|80019;Los Huertos|80019;Girasoles|80019;San Fermín|80019;Hacienda Alameda|80019;Hacienda Los Huertos|80019;" +
+    "Loma de Rodriguera|80019;Los Mezcales|80019;Los Ciruelos|80019;Jardines de la Sierra|80019;Paseo Alameda|80019;Hacienda Arboledas|80019;" +
+    "INFONAVIT Humaya|80020;STASE|80020;Humaya|80020;Desarrollo Urbano Tres Ríos|80020;Bonanza|80020;FOVISSSTE Diamante|80020;Pueblo Bonito|80020;" +
+    "Villa del Pedregal|80025;Riberas del Humaya|80025;Villas del Humaya|80025;La Ribera Residencial|80025;Jardines del Pedregal|80025;Las Canarias|80025;Alegranza|80025;Los Olivos|80025;Colinas de la Rivera|80025;Bosques del Humaya|80025;Brisas de Humaya|80025;Nueva Vizcaya|80025;Jardines del Rey|80025;" +
+    "Cuauhtémoc|80027;Campestre Los Laureles|80027;Tres Ríos|80027;Los Almendros|80027;Altamira|80027;" +
+    "Campestre Tres Ríos|80028;Portanova|80028;Rincón Real|80028;Santa Elena|80028;Lomas Verdes|80028;Tulipanes|80028;Villa Fontana|80028;Balcones del Humaya|80028;La Puerta|80028;Agustina Ramírez|80028;Los Sauces|80028;Villas de Culiacán|80028;" +
+    "Los Cerritos|80029;Pedregal del Humaya|80029;Fincas del Humaya|80029;Real de Santa Fe|80029;Santa Fe|80029;Santa Rosa|80029;10 de Abril|80029;Lomas del Humaya|80029;Colinas del Humaya|80029;Cimas del Humaya|80029;Heraclio Bernal|80029;FOVISSSTE Humaya|80029;Cumbre Real|80029;Jardines de Santa Fe|80029;" +
+    "Gabriel Leyva|80030;Riverside|80030;Tierra Blanca|80030;Burócrata|80030;Portales del Río|80030;Parque Alameda|80030;Rincón Alameda|80034;Los Cisnes|80034;" +
+    "Chapultepec del Río|80040;Paseo del Río|80040;Santa Teresa|80040;Chapultepec|80040;Santa Margarita|80040;Riberas de Tamazula|80040;La Lima|80040;Real de Chapultepec|80040;" +
+    "Bosques del Río|80050;La Rioja|80050;Jardines del Río|80050;Country del Río|80050;Villas del Río|80050;Avellaneda|80050;Valle del Río|80050;Enrique Félix Castro|80050;Juntas de Humaya|80050;Valle Alto|80050;Hermanos Flores Magón|80050;Prados de Occidente|80050;" +
+    "Del Humaya|80054;Horizontes|80054;Misiones|80054;4 de Marzo|80054;Montecarlo Residencial|80054;" +
+    "Universidad 94|80058;San Florencio|80058;Villas Victoria|80058;Valencia|80058;9 de Marzo|80058;INFONAVIT Solidaridad|80058;Acueducto|80058;Pedregal de San Ángel|80058;Altos Bacurimi|80058;Villa del Cedro|80058;Pradera Dorada|80058;Rancho Contento|80058;Valle Dorado|80058;La Conquista|80058;Bonaterra|80058;Praderas del Rey|80058;Portalegre|80058;" +
+    "Praderas del Humaya|80059;Espacios Barcelona|80059;CANACO|80059;La Campiña|80060;Aurora|80060;Periodista|80060;Las Quintas|80060;Amapas|80063;Viñedos|80063;Quinta Americana|80063;Haciendas del Río|80064;Verona|80064;Banús|80065;" +
+    "Vicente Guerrero|80070;El Barrio|80080;Genaro Estrada|80080;Villa Satélite|80088;Las Vegas|80090;Miguel Hidalgo|80090;" +
+    "Real del Álamo|80100;Santa Inés|80100;San Ángel|80100;Los Patios|80100;Las Dunas|80100;Los Álamos|80100;Puerta de Hierro|80100;La Paloma|80100;Condesa|80100;Country Álamos|80100;" +
+    "Tabachines|80104;Real del Country|80104;Las Flores|80104;Palermo|80104;Vallado Viejo|80105;La Cantera|80106;Country Tres Ríos|80107;Lomas del Boulevard|80110;Francisco Villa|80110;El Vallado|80110;Popular|80120;Industrial Bravo|80120;Los Pinos|80128;" +
+    "Los Helechos|80130;Villa Andalucía|80130;Altos de Bachigualato|80130;Nuevo Bachigualato|80135;San Javier|80135;Villas del Campo|80135;" +
+    "Campo Bello|80140;San Diego|80140;Las Alondras|80140;Bachigualato|80140;Las Terrazas|80140;Villas de Cortés|80140;Paraíso|80140;Danubio|80140;Las Mañanitas|80140;San Luis Residencial|80140;Valle Bonito|80140;" +
+    "Terranova|80143;Valles del Sol|80143;San Fernando|80143;Santa Bárbara|80143;Joyas del Valle|80144;Hacienda de la Mora|80145;Bugambilias|80145;Valles Españoles|80145;Versalles|80145;" +
+    "San Rafael|80150;Palmillas Residencial|80150;Palma Dorada|80150;Rincón del Valle|80155;Fuentes del Valle|80155;Villa Contenta|80159;Las Palmas|80159;Villa Serena|80159;INFONAVIT Las Flores|80159;Salvador Alvarado|80160;" +
+    "Nuevo Culiacán|80170;Morelos|80170;Balcones de San Miguel|80176;Colinas del Parque|80176;Colina del Rey|80177;Loma Linda|80177;La Cúspide|80177;Victoria|80178;Las Palomas|80178;San Carlos|80178;Cañadas|80178;INFONAVIT Cañadas|80179;Lomas del Bosque|80179;La Ventana|80179;" +
+    "Los Girasoles|80180;Los Portales|80180;Santa Clara|80180;Gustavo Díaz Ordaz|80180;Libertad|80180;Loma Bonita|80180;Paseo de los Arcos|80180;" +
+    "Centenario|80184;Casa Blanca|80184;Villa Verde|80184;Villa Dorada|80184;Casas Lindas|80184;San Sebastián|80184;Villa del Roble|80184;Balcones del Valle|80184;San Agustín|80184;" +
+    "INFONAVIT Barrancos|80189;Rincón de Santa Rosa|80189;El Olivar|80189;Azucena|80189;Jardines del Valle|80189;Villa Colonial|80189;Miravalle|80189;" +
+    "Aquiles Serdán|80190;Adolfo Ruiz Cortines|80190;Josefa Ortiz de Domínguez|80190;Adolfo López Mateos|80190;Independencia|80190;" +
+    "Lomas Paraíso|80194;Ferrocarrilera|80194;Finisterra|80194;Paseo Azteca|80194;Plutarco Elías Calles|80194;Real del Parque|80194;Valle de Amapa|80194;Antonio Nakayama|80194;Capistrano Residencial|80194;Domingo Rubí|80194;Chulavista|80194;Colinas del Sol|80194;Prados Residencial|80194;" +
+    "Rincón del Parque|80197;Lomas de San Isidro|80197;Progreso|80197;Colinas del Bosque|80197;Felipe Ángeles|80197;Ibérica|80197;Prados del Sol|80197;Hacienda del Valle|80197;Valle Real|80197;Perisur|80197;" +
+    "22 de Diciembre|80199;Barrio San Francisco|80199;Barrio San José|80199;Renato Vega Alvarado|80199;Villa Bonita|80199;Campos Elíseos|80199;Amado Nervo|80199;Real de Minas|80199;Buenos Aires|80199;Francisco I. Madero|80199;La Primavera|80199;" +
+    "Jorge Almada|80200;Miguel Alemán|80200;Benito Juárez|80210;Guadalupe|80220;Montebello|80227;Colinas de San Miguel|80228;Antonio Rosales|80230;5 de Mayo|80230;Melchor Ocampo|80230;San Juan|80240;Guadalupe Victoria|80240;" +
+    "Vista Hermosa|80246;Florida|80246;Laureles|80246;Las Coloradas|80246;San Benito|80246;San Valentino|80247;7 Gotas|80247;5 de Febrero|80247;Florenza|80247;Camino Real|80247;Rincón Feliz|80248;Revolución|80248;La Esperanza|80248;El Pipila|80249;La Amistad|80249;" +
+    "Lomas de Guadalupe|80250;Rafael Buelna|80260;Emiliano Zapata|80260;Sinaloa|80260;10 de Mayo|80270;Margarita|80270;República Mexicana|80279;Estrella Nueva Galicia|80280;Mezquitillo|80280;21 de Marzo|80280;La Cascada|80280;Renato Vega Amador|80280;" +
+    "Lázaro Cárdenas|80290;Simón Bolívar|80290;Las Huertas|80290;Providencia|80290;Córcega|80294;Costa del Sol|80294;El Ranchito|80294;Latitud Sur|80294;Altaria|80295;Alturas del Sur|80295;Las Ilusiones|80295;" +
+    "12 de Diciembre|80296;8 de Febrero|80296;Antonio Toledo Corro|80296;La Costera|80296;CNOP|80297;Huizaches|80298;Aguaruto Centro|80308;Aguaruto Viejo|80308;20 de Noviembre|80308;Demetrio Vallejo|80308")
+    .split(";").map(function (s) { var p = s.split("|"); return { n: p[0], cp: p[1] }; });
+  var COLMAP = {};
+  COLS.forEach(function (c) { var k = c.n.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); if (!COLMAP[k]) COLMAP[k] = c; });
+  var destino = DEST_DEFAULT, editDest = false, msgText = null, msgFor = "";
+  var saveDest = function (n) { destino = n; try { localStorage.setItem(LS_DEST, n); } catch (e) {} return Promise.resolve(); };
+
+  var $ = function (s) { return document.querySelector(s); };
+  var clients = new Map();
+  var ready = false, store = null, dl = null;
+  var view = "buscar", mode = "idle", key = "", editing = false, matches = [], nomatch = "tel";
+  var filterQ = "", colF = "", sort = { k: "nombre", dir: 1 };
+  var confirmDel = "", formErr = "", formVals = null, msgTimer = 0, busy = false;
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function plain(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
+  function digits(s) {
+    var d = String(s).replace(/\D/g, "");
+    if (d.length === 13 && d.indexOf("521") === 0) d = d.slice(3);
+    else if (d.length === 12 && d.indexOf("52") === 0) d = d.slice(2);
+    return d;
+  }
+  function fmt(d) { return d.length === 10 ? d.replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3") : d; }
+  function norm(c) {
+    return { tel: c.tel, nombre: c.nombre || "", calle: c.calle || "", colonia: c.colonia || "", cp: c.cp || "",
+      notas: c.notas || "", creado: c.creado || "", visitas: Number(c.visitas) || 0, ultima: c.ultima || "" };
+  }
+  function fdate(iso) {
+    if (!iso) return "—";
+    var d = new Date(iso); if (isNaN(d)) return "—";
+    return d.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+  }
+  function rel(iso) {
+    if (!iso) return "Sin visitas todavía";
+    var d = new Date(iso); if (isNaN(d)) return "Sin visitas todavía";
+    var t = new Date(), a = new Date(t.getFullYear(), t.getMonth(), t.getDate()), b = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var diff = Math.round((a - b) / 86400000);
+    if (diff <= 0) return "Última visita: hoy";
+    if (diff === 1) return "Última visita: ayer";
+    return "Última visita: " + fdate(iso);
+  }
+  function say(t) {
+    var m = $("#msg"); m.textContent = t;
+    clearTimeout(msgTimer);
+    if (t) msgTimer = setTimeout(function () { m.textContent = ""; }, 3500);
+  }
+  function all() { return Array.from(clients.values()); }
+
+  /* ---------- Contadores ---------- */
+  function renderStats() {
+    var list = all(), cols = {}, vis = 0, nuevos = 0, lim = Date.now() - 7 * 86400000;
+    list.forEach(function (c) {
+      cols[plain(c.colonia)] = 1; vis += c.visitas;
+      if (c.creado && new Date(c.creado).getTime() >= lim) nuevos++;
+    });
+    var t = [[ready ? list.length : "…", "Clientes"], [ready ? Object.keys(cols).length : "…", "Colonias"],
+             [ready ? nuevos : "…", "Nuevos en 7 días"], [ready ? vis : "…", "Visitas"]];
+    $("#stats").innerHTML = t.map(function (x) { return '<div class="tile"><b>' + x[0] + '</b><span>' + x[1] + '</span></div>'; }).join("");
+  }
+
+  /* ---------- Buscar ---------- */
+  function fichaHTML(c) {
+    var dir = [c.calle, c.colonia, "C.P. " + c.cp, CIUDAD].filter(Boolean).join(", ");
+    return '<article class="ticket">' +
+      '<div class="main">' +
+        '<span class="chip ok">Cliente encontrado</span>' +
+        '<h2>' + esc(c.nombre) + '</h2>' +
+        '<p class="tel">' + esc(fmt(c.tel)) + '</p>' +
+        '<dl>' +
+          '<div class="span2"><dt>Calle</dt><dd>' + esc(c.calle) + '</dd></div>' +
+          '<div><dt>Colonia</dt><dd>' + esc(c.colonia) + '</dd></div>' +
+          '<div><dt>Código postal</dt><dd class="mono">' + esc(c.cp) + '</dd></div>' +
+          '<div><dt>Ciudad</dt><dd>' + esc(CIUDAD) + '</dd></div>' +
+          '<div><dt>Cliente desde</dt><dd>' + esc(fdate(c.creado)) + '</dd></div>' +
+          '<div class="span2"><dt>Notas</dt><dd>' + (c.notas ? esc(c.notas) : '<span style="color:var(--muted)">Sin notas. Agrega sus gustos con Editar datos.</span>') + '</dd></div>' +
+        '</dl>' +
+        '<div class="actions">' +
+          '<a class="btn ghost" href="https://wa.me/52' + esc(c.tel) + '" target="_blank" rel="noopener noreferrer">WhatsApp al cliente</a>' +
+          '<a class="btn ghost" href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(dir) + '" target="_blank" rel="noopener noreferrer">Ver en mapa</a>' +
+          '<button class="btn ghost" data-act="copy" data-dir="' + esc(dir) + '">Copiar dirección</button>' +
+          '<button class="btn ghost" data-act="edit">Editar datos</button>' +
+          '<button class="btn ghost" data-act="clear">Nueva búsqueda</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="stub">' +
+        '<span class="lab">Visitas</span>' +
+        '<span class="big">' + c.visitas + '</span>' +
+        '<span class="last">' + esc(rel(c.ultima)) + '</span>' +
+        '<button class="btn" data-act="visit"' + (busy ? ' disabled' : '') + '>Registrar visita</button>' +
+      '</div></article>';
+  }
+  function tpl(c) {
+    var L = ["Cliente: " + c.nombre, "Tel: " + fmt(c.tel), "Dirección: " + [c.calle, "Col. " + c.colonia, "C.P. " + c.cp, CIUDAD].join(", ")];
+    if (c.notas) L.push("Notas: " + c.notas);
+    return L.join("\n");
+  }
+  function waUrl() { return "https://wa.me/52" + destino + "?text=" + encodeURIComponent(msgText || ""); }
+  function updateWa() { var a = $("#wa-send"); if (a) a.href = waUrl(); }
+  function msgHTML() {
+    var dest = editDest
+      ? '<input id="dest-input" inputmode="tel" maxlength="16" value="' + esc(fmt(destino)) + '" aria-label="Número de destino"><button class="btn small" data-act="dest-save">Guardar</button><button class="btn ghost small" data-act="dest-cancel">Cancelar</button>'
+      : '<strong>' + esc(fmt(destino)) + '</strong><button class="btn ghost small" data-act="dest-edit">Cambiar número</button>';
+    return '<section class="panel msgbox"><h2>Mandar mensaje</h2>' +
+      '<div class="dest"><span class="lab">Enviar a</span>' + dest + '</div>' +
+      '<label for="msg-text">Mensaje con los datos del cliente</label>' +
+      '<textarea id="msg-text" spellcheck="true">' + esc(msgText) + '</textarea>' +
+      '<div class="actions">' +
+        '<a class="btn" id="wa-send" href="' + esc(waUrl()) + '" target="_blank" rel="noopener noreferrer">Abrir WhatsApp con el mensaje</a>' +
+        '<button class="btn ghost" data-act="copymsg">Copiar mensaje</button>' +
+      '</div>' +
+      '<p class="hint">Se abre WhatsApp con el texto ya escrito. Tú das enviar.</p></section>';
+  }
+  function listHTML() {
+    return '<div class="panel"><span class="chip warn">' + matches.length + (matches.length === 1 ? ' coincidencia' : ' coincidencias') + '</span>' +
+      '<ul class="matches" style="margin-top:10px">' + matches.map(function (c) {
+        return '<li><button class="rowbtn" data-act="open" data-k="' + c.tel + '"><strong>' + esc(c.nombre) + '</strong><span class="mono">' + esc(fmt(c.tel)) + '</span><small>' + esc(c.colonia) + ' · ' + esc(c.calle) + '</small></button></li>';
+      }).join("") + '</ul></div>';
+  }
+  function formHTML() {
+    var v = formVals || {};
+    function f(id, lab, val, o) {
+      o = o || {};
+      return '<div' + (o.span ? ' style="grid-column:1/-1"' : '') + '><label for="f-' + id + '">' + lab + '</label>' +
+        (o.area ? '<textarea id="f-' + id + '" name="' + id + '"' + (o.attrs ? ' ' + o.attrs : '') + '>' + esc(val || "") + '</textarea>'
+                : '<input id="f-' + id + '" name="' + id + '" value="' + esc(val || "") + '"' + (o.attrs ? ' ' + o.attrs : '') + '>') + '</div>';
+    }
+    return '<form class="panel grid" id="client-form" novalidate autocomplete="off">' +
+      '<h2>' + (editing ? 'Editar cliente' : 'Registrar cliente nuevo') + '</h2>' +
+      f("tel", "Teléfono", fmt(key), { attrs: 'readonly' }) +
+      f("cp", "Código postal", v.cp, { attrs: 'inputmode="numeric" maxlength="5" placeholder="80000"' }) +
+      f("nombre", "Nombre completo", v.nombre, { span: true, attrs: 'placeholder="Nombre y apellidos"' }) +
+      f("calle", "Calle y número", v.calle, { span: true }) +
+      f("colonia", "Colonia de Culiacán", v.colonia, { span: true, attrs: 'list="dl-colonias" placeholder="Escribe y elige de la lista"' }) +
+      '<datalist id="dl-colonias">' + COLS.map(function (c) { return '<option value="' + esc(c.n) + '">' + c.cp + '</option>'; }).join("") + '</datalist>' +
+      '<p class="hint tight">Ciudad: ' + esc(CIUDAD) + '. Al elegir la colonia se llena el código postal. Si la colonia no aparece, escríbela y pon el código a mano.</p>' +
+      f("notas", "Notas (cortes favoritos, forma de pago, entrega)", v.notas, { span: true, area: true }) +
+      (formErr ? '<p class="err" role="alert">' + esc(formErr) + '</p>' : '') +
+      '<div class="actions" style="grid-column:1/-1;margin-top:4px">' +
+        '<button class="btn" type="submit">Guardar cliente</button>' +
+        '<button class="btn ghost" type="button" data-act="cancel">Cancelar</button>' +
+      '</div></form>';
+  }
+  function renderBuscar() {
+    var box = $("#result");
+    if (mode === "found" && !clients.has(key)) mode = "notfound";
+    if (mode === "idle") { box.innerHTML = ""; return; }
+    if (mode === "invalid") {
+      box.innerHTML = '<div class="panel nf"><span class="chip warn">Revisa el número</span><p>Escribe los 10 dígitos del teléfono, por ejemplo 667 123 4567.</p></div>';
+    } else if (mode === "nomatch") {
+      box.innerHTML = '<div class="panel nf"><span class="chip warn">Sin resultados</span><p>' +
+        (nomatch === "name" ? 'Ningún cliente se llama así. Para registrar uno nuevo, busca primero su teléfono completo.'
+                            : 'Ningún cliente empieza con ese número. Escribe los 10 dígitos para registrar uno nuevo.') + '</p></div>';
+    } else if (mode === "list") {
+      box.innerHTML = listHTML();
+    } else if (mode === "found") {
+      var cur = clients.get(key);
+      if (msgFor !== key || msgText == null) { msgText = tpl(cur); msgFor = key; }
+      box.innerHTML = fichaHTML(cur) + msgHTML();
+    } else if (mode === "notfound") {
+      box.innerHTML = '<div class="panel nf"><span class="chip warn">No registrado</span>' +
+        '<p>No hay ningún cliente con el número <span class="num">' + esc(fmt(key)) + '</span>.</p>' +
+        '<div class="actions"><button class="btn" data-act="register">Registrar</button>' +
+        '<button class="btn ghost" data-act="clear">Nueva búsqueda</button></div></div>';
+    } else if (mode === "form") {
+      box.innerHTML = formHTML();
+      var first = box.querySelector("#f-nombre"); if (first) first.focus();
+    }
+  }
+  function runSearch(q, live) {
+    var t = q.trim(), d = digits(q), letters = /[a-záéíóúüñ]/i.test(q);
+    matches = [];
+    if (!t) { mode = "idle"; key = ""; return; }
+    if (!letters && d.length === 10) { key = d; mode = clients.has(d) ? "found" : "notfound"; return; }
+    if (!letters && d.length >= 3) {
+      matches = all().filter(function (c) { return c.tel.indexOf(d) === 0 || c.tel.indexOf(d) > -1 && d.length >= 4; });
+      nomatch = "tel"; mode = matches.length ? "list" : "nomatch"; return;
+    }
+    if (letters && t.length >= 2) {
+      var p = plain(t);
+      matches = all().filter(function (c) { return plain(c.nombre).indexOf(p) > -1; });
+      nomatch = "name"; mode = matches.length ? "list" : "nomatch"; return;
+    }
+    mode = live ? "idle" : "invalid";
+  }
+
+  /* ---------- Todos ---------- */
+  function visibleRows() {
+    var q = plain(filterQ.trim()), qd = digits(filterQ);
+    var rows = all().filter(function (c) {
+      if (colF && plain(c.colonia) !== colF) return false;
+      if (!q) return true;
+      return plain(c.nombre + " " + c.calle + " " + c.colonia + " " + c.cp + " " + c.notas).indexOf(q) > -1 || (qd && c.tel.indexOf(qd) > -1);
+    });
+    rows.sort(function (a, b) {
+      var r;
+      if (sort.k === "visitas") r = a.visitas - b.visitas;
+      else if (sort.k === "creado") r = (a.creado || "").localeCompare(b.creado || "");
+      else r = String(a[sort.k] || "").localeCompare(String(b[sort.k] || ""), "es");
+      return r * sort.dir || a.nombre.localeCompare(b.nombre, "es");
+    });
+    return rows;
+  }
+  function renderTodos() {
+    $("#count").textContent = ready ? "(" + clients.size + ")" : "(…)";
+    var box = $("#table-box");
+    if (!ready) { $("#chips").innerHTML = ""; box.innerHTML = '<div class="empty">Cargando clientes…</div>'; return; }
+    var cols = {};
+    all().forEach(function (c) { var k = plain(c.colonia); if (!cols[k]) cols[k] = { n: c.colonia, c: 0 }; cols[k].c++; });
+    var keys = Object.keys(cols).sort(function (a, b) { return cols[a].n.localeCompare(cols[b].n, "es"); });
+    if (colF && !cols[colF]) colF = "";
+    $("#chips").innerHTML = keys.length ? ('<button class="chipbtn" data-col="" aria-pressed="' + (!colF) + '">Todas</button>' + keys.map(function (k) {
+      return '<button class="chipbtn" data-col="' + esc(k) + '" aria-pressed="' + (colF === k) + '">' + esc(cols[k].n) + ' (' + cols[k].c + ')</button>';
+    }).join("")) : "";
+    if (!clients.size) { box.innerHTML = '<div class="empty">Todavía no hay clientes. Busca un teléfono y usa Registrar para agregar el primero.</div>'; return; }
+    var rows = visibleRows();
+    if (!rows.length) { box.innerHTML = '<div class="empty">Ningún cliente coincide con el filtro.</div>'; return; }
+    function th(k, lab, cls) {
+      var on = sort.k === k;
+      return '<th' + (on ? ' aria-sort="' + (sort.dir > 0 ? "ascending" : "descending") + '"' : '') + (cls ? ' style="text-align:right"' : '') + '><button class="sort" data-sort="' + k + '">' + lab + (on ? (sort.dir > 0 ? " ↑" : " ↓") : "") + '</button></th>';
+    }
+    var h = '<table><thead><tr>' + th("nombre", "Nombre") + '<th>Teléfono</th><th>Calle</th>' + th("colonia", "Colonia") + '<th>C.P.</th>' +
+      th("visitas", "Visitas", 1) + th("creado", "Desde") + '<th></th></tr></thead><tbody>';
+    rows.forEach(function (c) {
+      var acts = confirmDel === c.tel
+        ? '<span>¿Eliminar?</span> <button class="btn small danger" data-act="del-yes" data-k="' + c.tel + '">Sí</button><button class="btn small ghost" data-act="del-no">No</button>'
+        : '<button class="btn small ghost" data-act="open" data-k="' + c.tel + '">Ver</button><button class="btn small ghost" data-act="del" data-k="' + c.tel + '">Eliminar</button>';
+      h += '<tr><td>' + esc(c.nombre) + '</td><td class="mono nowrap">' + esc(fmt(c.tel)) + '</td><td>' + esc(c.calle) +
+        '</td><td>' + esc(c.colonia) + '</td><td class="mono">' + esc(c.cp) + '</td><td class="num">' + c.visitas +
+        '</td><td class="nowrap">' + esc(fdate(c.creado)) + '</td><td class="acts">' + acts + '</td></tr>';
+    });
+    box.innerHTML = h + '</tbody></table>';
+  }
+
+  /* ---------- Resumen ---------- */
+  function renderResumen() {
+    var box = $("#resumen-box");
+    if (!ready) { box.innerHTML = '<div class="card wide"><div class="empty">Cargando…</div></div>'; return; }
+    if (!clients.size) { box.innerHTML = '<div class="card wide"><div class="empty">Aquí aparecerán las estadísticas cuando registres clientes.</div></div>'; return; }
+    var cols = {};
+    all().forEach(function (c) { var k = plain(c.colonia); if (!cols[k]) cols[k] = { n: c.colonia, c: 0 }; cols[k].c++; });
+    var arr = Object.keys(cols).map(function (k) { return cols[k]; }).sort(function (a, b) { return b.c - a.c || a.n.localeCompare(b.n, "es"); });
+    var max = arr[0].c;
+    var bars = arr.map(function (x) {
+      return '<li><span class="lab" title="' + esc(x.n) + '">' + esc(x.n) + '</span><span class="bar"><i style="width:' + Math.max(4, Math.round(x.c / max * 100)) + '%"></i></span><b>' + x.c + '</b></li>';
+    }).join("");
+    var freq = all().filter(function (c) { return c.visitas > 0; }).sort(function (a, b) { return b.visitas - a.visitas; }).slice(0, 5);
+    var recent = all().filter(function (c) { return c.creado; }).sort(function (a, b) { return b.creado.localeCompare(a.creado); }).slice(0, 5);
+    function top(list, val, sub) {
+      return list.length ? '<ul class="toplist">' + list.map(function (c) {
+        return '<li><span>' + esc(c.nombre) + '<small>' + esc(sub(c)) + '</small></span><b>' + val(c) + '</b></li>';
+      }).join("") + '</ul>' : '<div class="empty">Todavía no hay datos.</div>';
+    }
+    box.innerHTML =
+      '<div class="card wide"><h2>Clientes por colonia</h2><ul class="bars">' + bars + '</ul></div>' +
+      '<div class="card"><h2>Los que más vienen</h2>' + top(freq, function (c) { return c.visitas + (c.visitas === 1 ? " visita" : " visitas"); }, function (c) { return c.colonia; }) + '</div>' +
+      '<div class="card"><h2>Registrados recientemente</h2>' + top(recent, function (c) { return fdate(c.creado); }, function (c) { return c.colonia; }) + '</div>';
+  }
+
+  function setView(v) {
+    view = v;
+    ["buscar", "todos", "resumen"].forEach(function (n) {
+      $("#view-" + n).hidden = n !== v;
+      $("#tab-" + n).setAttribute("aria-selected", n === v);
+    });
+    if (v === "todos") { confirmDel = ""; renderTodos(); }
+    if (v === "resumen") renderResumen();
+  }
+  function refresh() {
+    var ae = document.activeElement && document.activeElement.id;
+    if (mode !== "form" && ae !== "msg-text" && ae !== "dest-input") renderBuscar();
+    renderStats(); renderTodos(); renderResumen();
+  }
+
+  /* ---------- Guardado ---------- */
+  function errText(e) {
+    if (e && e.code === "invalid_argument") return "Tu acceso solo permite ver. Pide permiso de colaborador para guardar cambios.";
+    if (e && e.code === "quota_exceeded") return "La base de datos está llena. Elimina clientes que ya no uses.";
+    return "No se pudo guardar. Intenta de nuevo en unos segundos.";
+  }
+  function startStore() {
+    function localLoad() {
+      var arr = null;
+      try { arr = JSON.parse(localStorage.getItem(LS_KEY)); } catch (e) {}
+      if (!Array.isArray(arr)) arr = SEED;
+      arr.forEach(function (c) { clients.set(c.tel, norm(c)); });
+    }
+    function localSave() {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(all())); } catch (e) {}
+    }
+    var use = (window.claude && window.claude.use) ? window.claude.use.bind(window.claude) : function () { return Promise.resolve(null); };
+    Promise.all([use("db").catch(function () { return null; }), use("downloads").catch(function () { return null; })]).then(function (r) {
+      var db = r[0]; dl = r[1];
+      if (db) {
+        var col = db.collection("clientes");
+        store = {
+          save: function (c) { return col.doc(c.tel).set(c).then(function () { clients.set(c.tel, c); }); },
+          remove: function (k) { return col.doc(k).delete().then(function () { clients.delete(k); }); }
+        };
+        $("#source").textContent = "Base de datos compartida: los cambios se ven en todos los dispositivos que abran esta página.";
+        var cfg = db.doc("ajustes/general");
+        saveDest = function (n) { return cfg.set({ destino: n }).then(function () { destino = n; }); };
+        cfg.onSnapshot(function (s) {
+          var x = s.exists ? s.data() : null;
+          if (x && digits(x.destino).length === 10) { destino = digits(x.destino); if (ready) refresh(); }
+        }, function () {});
+        col.onSnapshot(function (snap) {
+          var m = new Map();
+          snap.docs.forEach(function (d) { var x = d.data(); if (x && x.tel) m.set(d.id, norm(x)); });
+          clients = m; ready = true; refresh();
+        }, function () {
+          ready = true; $("#source").textContent = "No se pudo leer la base de datos. Recarga la página."; refresh();
+        });
+      } else {
+        localLoad();
+        try { var ld = digits(localStorage.getItem(LS_DEST) || ""); if (ld.length === 10) destino = ld; } catch (e) {}
+        store = {
+          save: function (c) { clients.set(c.tel, c); localSave(); return Promise.resolve(); },
+          remove: function (k) { clients.delete(k); localSave(); return Promise.resolve(); }
+        };
+        $("#source").textContent = "Los datos se guardan solo en este navegador.";
+        ready = true; refresh();
+      }
+    });
+  }
+  function csvCell(v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; }
+  function saveFile(name, text, mime) {
+    if (dl) {
+      return dl.save({ filename: name, data: text }).then(function () { say("Archivo guardado."); },
+        function (e) { if (!e || e.code !== "declined") say("No se pudo guardar el archivo."); });
+    }
+    try {
+      var url = URL.createObjectURL(new Blob([text], { type: mime }));
+      var a = document.createElement("a");
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      say("Archivo descargado.");
+    } catch (e) { say("No se pudo descargar el archivo."); }
+    return Promise.resolve();
+  }
+  function stampNow() {
+    var d = new Date();
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function exportCsv() {
+    var head = ["Teléfono", "Nombre", "Calle", "Colonia", "C.P.", "Ciudad", "Notas", "Visitas", "Última visita", "Cliente desde"];
+    var rows = visibleRows().map(function (c) {
+      return [c.tel, c.nombre, c.calle, c.colonia, c.cp, CIUDAD, c.notas, c.visitas, c.ultima ? fdate(c.ultima) : "", fdate(c.creado)].map(csvCell).join(",");
+    });
+    saveFile("clientes-carniceria-" + stampNow() + ".csv", "\ufeff" + [head.map(csvCell).join(",")].concat(rows).join("\r\n"), "text/csv;charset=utf-8");
+  }
+
+  /* ---------- Eventos ---------- */
+  document.querySelector("nav").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-view]"); if (b) setView(b.dataset.view);
+  });
+  $("#filter").addEventListener("input", function (e) { filterQ = e.target.value; renderTodos(); });
+  $("#chips").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-col]"); if (!b) return;
+    colF = b.dataset.col; renderTodos();
+  });
+  $("#table-box").addEventListener("click", function (e) {
+    var s = e.target.closest("[data-sort]");
+    if (s) { var k = s.dataset.sort; sort = { k: k, dir: sort.k === k ? -sort.dir : (k === "visitas" || k === "creado" ? -1 : 1) }; renderTodos(); return; }
+    var b = e.target.closest("[data-act]"); if (!b) return;
+    var a = b.dataset.act, k2 = b.dataset.k;
+    if (a === "open") { openClient(k2); }
+    else if (a === "del") { confirmDel = k2; renderTodos(); }
+    else if (a === "del-no") { confirmDel = ""; renderTodos(); }
+    else if (a === "del-yes") {
+      store.remove(k2).then(function () { confirmDel = ""; refresh(); say("Cliente eliminado."); },
+        function (err) { confirmDel = ""; renderTodos(); say(errText(err)); });
+    }
+  });
+  $("#export").addEventListener("click", exportCsv);
+
+  function openClient(k) {
+    key = k; mode = "found"; editing = false; matches = []; formErr = "";
+    $("#phone").value = fmt(k);
+    setView("buscar"); renderBuscar();
+  }
+
+  $("#phone").addEventListener("input", function (e) {
+    if (!ready) return;
+    editing = false; formErr = ""; formVals = null;
+    runSearch(e.target.value, true); renderBuscar();
+  });
+  $("#search-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!ready) { say("Cargando la base de datos, intenta en un momento."); return; }
+    editing = false; formErr = ""; formVals = null;
+    runSearch($("#phone").value, false); renderBuscar();
+  });
+
+  $("#result").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-act]"); if (!b) return;
+    var a = b.dataset.act;
+    if (a === "open") openClient(b.dataset.k);
+    else if (a === "register") { editing = false; formVals = {}; formErr = ""; mode = "form"; renderBuscar(); }
+    else if (a === "edit") { editing = true; formVals = Object.assign({}, clients.get(key)); formErr = ""; mode = "form"; renderBuscar(); }
+    else if (a === "cancel") { mode = (editing && clients.has(key)) ? "found" : "notfound"; editing = false; renderBuscar(); }
+    else if (a === "clear") { mode = "idle"; key = ""; matches = []; $("#phone").value = ""; renderBuscar(); $("#phone").focus(); }
+    else if (a === "dest-edit") { editDest = true; renderBuscar(); var di = $("#dest-input"); if (di) { di.focus(); di.select(); } }
+    else if (a === "dest-cancel") { editDest = false; renderBuscar(); }
+    else if (a === "dest-save") {
+      var nv = digits($("#dest-input").value);
+      if (nv.length !== 10) { say("El número debe tener 10 dígitos."); return; }
+      saveDest(nv).then(function () { editDest = false; renderBuscar(); say("Número de destino guardado."); },
+        function (err) { say(errText(err)); });
+    }
+    else if (a === "copymsg") {
+      var mt = msgText || "";
+      (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(mt) : Promise.reject())
+        .then(function () { say("Mensaje copiado."); }, function () { say("No se pudo copiar. Selecciona el texto del mensaje y cópialo."); });
+    }
+    else if (a === "copy") {
+      var txt = b.dataset.dir;
+      (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(txt) : Promise.reject())
+        .then(function () { say("Dirección copiada."); }, function () { say("No se pudo copiar. Dirección: " + txt); });
+    }
+    else if (a === "visit") {
+      var c = clients.get(key); if (!c || busy) return;
+      busy = true; renderBuscar();
+      store.save(Object.assign({}, c, { visitas: c.visitas + 1, ultima: new Date().toISOString() })).then(function () {
+        busy = false; refresh(); say("Visita registrada.");
+      }, function (err) { busy = false; renderBuscar(); say(errText(err)); });
+    }
+  });
+
+  $("#result").addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.id === "msg-text") { msgText = t.value; updateWa(); }
+    else if (t.id === "f-colonia") {
+      var hit = COLMAP[plain(t.value.trim())], cp = $("#f-cp");
+      if (hit && cp && (!cp.value || cp.dataset.auto === "1")) { cp.value = hit.cp; cp.dataset.auto = "1"; }
+    }
+    else if (t.id === "f-cp") { delete t.dataset.auto; }
+  });
+
+  $("#result").addEventListener("submit", function (e) {
+    if (e.target.id !== "client-form") return;
+    e.preventDefault();
+    var fd = new FormData(e.target), old = editing ? clients.get(key) : null;
+    var c = {
+      tel: key,
+      nombre: String(fd.get("nombre") || "").trim(),
+      calle: String(fd.get("calle") || "").trim(),
+      colonia: String(fd.get("colonia") || "").trim(),
+      cp: String(fd.get("cp") || "").trim(),
+      notas: String(fd.get("notas") || "").trim(),
+      creado: old ? old.creado : new Date().toISOString(),
+      visitas: old ? old.visitas : 0,
+      ultima: old ? old.ultima : ""
+    };
+    formVals = c;
+    if (!c.nombre) formErr = "Escribe el nombre del cliente.";
+    else if (!c.calle) formErr = "Escribe la calle y el número.";
+    else if (!c.colonia) formErr = "Escribe la colonia.";
+    else if (!/^\d{5}$/.test(c.cp)) formErr = "El código postal debe tener 5 dígitos.";
+    else formErr = "";
+    if (formErr) { renderBuscar(); return; }
+    var was = editing;
+    store.save(c).then(function () {
+      editing = false; formErr = ""; mode = "found"; msgFor = ""; refresh();
+      say(was ? "Cambios guardados." : "Cliente registrado.");
+    }, function (err) { formErr = errText(err); renderBuscar(); });
+  });
+
+  $("#backup").addEventListener("click", function () {
+    saveFile("respaldo-clientes-" + stampNow() + ".json", JSON.stringify(all(), null, 2), "application/json");
+  });
+  $("#restore").addEventListener("click", function () { $("#restore-file").click(); });
+  $("#restore-file").addEventListener("change", function (e) {
+    var f = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!f || !ready) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var arr;
+      try { arr = JSON.parse(rd.result); } catch (x) { say("El archivo no es un respaldo válido."); return; }
+      if (!Array.isArray(arr)) { say("El archivo no es un respaldo válido."); return; }
+      var list = arr.filter(function (c) { return c && /^\d{10}$/.test(String(c.tel)); }).map(function (c) { c.tel = String(c.tel); return norm(c); });
+      if (!list.length) { say("El respaldo no trae clientes."); return; }
+      list.reduce(function (p, c) { return p.then(function () { return store.save(c); }); }, Promise.resolve())
+        .then(function () { refresh(); say("Se restauraron " + list.length + " clientes."); },
+              function (err) { refresh(); say(errText(err)); });
+    };
+    rd.readAsText(f);
+  });
+
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+  renderStats(); renderTodos(); renderResumen();
+  startStore();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "Carnicería · Directorio de clientes",
+  "short_name": "Carnicería",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#85201f",
+  "theme_color": "#85201f",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
