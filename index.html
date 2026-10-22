@@ -467,7 +467,9 @@ footer { font-size: .8rem; color: var(--muted); }
       '</div>';
   }
   function tpl(c) {
-    var L = ["Cliente: " + c.nombre, "Tel: " + fmt(c.tel), "Dirección: " + [c.calle, "Col. " + c.colonia, "C.P. " + c.cp, CIUDAD].join(", ")];
+    var addr = [c.calle, "Col. " + c.colonia, "C.P. " + c.cp, CIUDAD].join(", ");
+    var L = ["Cliente: " + c.nombre, "Tel: " + fmt(c.tel), "Dirección: " + addr,
+      "Ubicación: https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(addr)];
     if (c.notas) L.push("Notas: " + c.notas);
     return L.join("\n");
   }
