@@ -186,7 +186,23 @@ td.acts .btn + .btn, td.acts span + .btn { margin-left: 6px; }
 .dest strong { font: 600 1.3rem var(--f-mono); color: var(--accent); }
 .dest input { width: 190px; font: 600 1.1rem var(--f-mono); min-height: 40px; }
 .cuts { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 14px; }
-.msgbox textarea { min-height: 130px; font: 400 .95rem/1.5 var(--f-mono); }
+.msgbox textarea { min-height: 190px; font: 400 .95rem/1.5 var(--f-mono); }
+.eta { border: 1px solid var(--line); background: var(--stub); border-radius: 14px; padding: 18px; margin-bottom: 18px; }
+.eta-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.eta-head svg { width: 30px; height: 30px; color: var(--accent); flex: none; }
+.eta-head b { display: block; font: 600 1.05rem/1.3 var(--f-body); }
+.eta-head small { display: block; color: var(--muted); font-size: .84rem; }
+.eta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; }
+.eta-input { width: 124px; min-height: 64px; text-align: center; font: 600 2.1rem/1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg); }
+.seg button { font: 600 .95rem var(--f-body); color: var(--muted); background: transparent; border: 0; padding: 0 18px; min-height: 64px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg button:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.eta-out { flex: 1 1 170px; min-width: 0; display: flex; flex-direction: column; }
+.eta-out span { font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.eta-out strong { font: 600 1.45rem/1.2 var(--f-mono); overflow-wrap: anywhere; }
+.eta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+@media (max-width: 520px) { .eta-input { width: 104px; } .seg button { padding: 0 14px; } }
 .hint.tight { grid-column: 1 / -1; margin: 0; }
 footer { font-size: .8rem; color: var(--muted); }
 [hidden] { display: none !important; }
@@ -405,6 +421,51 @@ footer { font-size: .8rem; color: var(--muted); }
         '<button class="btn" data-act="visit"' + (busy ? ' disabled' : '') + '>Registrar visita</button>' +
       '</div></article>';
   }
+  var etaVal = "", etaUnit = "min";
+  function etaMinutes() {
+    var v = parseFloat(String(etaVal).replace(",", "."));
+    if (!isFinite(v) || v <= 0) return 0;
+    return Math.min(Math.round(v * (etaUnit === "h" ? 60 : 1)), 99 * 60);
+  }
+  function etaText(m) {
+    if (!m) return "";
+    var h = Math.floor(m / 60), r = m % 60;
+    if (!h) return m + " min";
+    return h + " h" + (r ? " " + r + " min" : "");
+  }
+  function setEtaLine(t) {
+    var base = String(t || "").split("\n").filter(function (l) { return l.indexOf("Tiempo estimado:") !== 0; }).join("\n").replace(/\s+$/, "");
+    var m = etaMinutes();
+    return m ? base + "\nTiempo estimado: " + etaText(m) : base;
+  }
+  function syncEta(skipInput) {
+    var m = etaMinutes();
+    msgText = setEtaLine(msgText);
+    var ta = $("#msg-text"); if (ta) ta.value = msgText;
+    updateWa();
+    var o = $("#eta-out"); if (o) o.textContent = m ? etaText(m) : "Sin definir";
+    document.querySelectorAll("[data-act=eta-unit]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.u === etaUnit)); });
+    document.querySelectorAll("[data-act=eta-chip]").forEach(function (b) { b.setAttribute("aria-pressed", String(m > 0 && +b.dataset.m === m)); });
+    var i = $("#eta-input"); if (i && !skipInput && i.value !== etaVal) i.value = etaVal;
+  }
+  function etaHTML() {
+    var m = etaMinutes();
+    var chips = [[15, "15 min"], [30, "30 min"], [45, "45 min"], [60, "1 h"], [90, "1 h 30 min"], [120, "2 h"]].map(function (x) {
+      return '<button type="button" class="chipbtn" data-act="eta-chip" data-m="' + x[0] + '" aria-pressed="' + (m === x[0]) + '">' + x[1] + '</button>';
+    }).join("");
+    return '<div class="eta">' +
+      '<div class="eta-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>' +
+        '<div><b>¿En cuánto tiempo estará el producto?</b><small>Escríbelo tú. Se agrega al mensaje antes de enviarlo.</small></div></div>' +
+      '<div class="eta-row">' +
+        '<input class="eta-input" id="eta-input" type="text" inputmode="decimal" maxlength="5" placeholder="0" autocomplete="off" value="' + esc(etaVal) + '" aria-label="Tiempo estimado">' +
+        '<div class="seg" role="group" aria-label="Unidad de tiempo">' +
+          '<button type="button" data-act="eta-unit" data-u="min" aria-pressed="' + (etaUnit === "min") + '">Minutos</button>' +
+          '<button type="button" data-act="eta-unit" data-u="h" aria-pressed="' + (etaUnit === "h") + '">Horas</button></div>' +
+        '<div class="eta-out"><span>Se enviará</span><strong id="eta-out">' + esc(m ? etaText(m) : "Sin definir") + '</strong></div>' +
+      '</div>' +
+      '<div class="eta-chips">' + chips + '<button type="button" class="chipbtn" data-act="eta-clear">Borrar</button></div>' +
+      '</div>';
+  }
   function tpl(c) {
     var L = ["Cliente: " + c.nombre, "Tel: " + fmt(c.tel), "Dirección: " + [c.calle, "Col. " + c.colonia, "C.P. " + c.cp, CIUDAD].join(", ")];
     if (c.notas) L.push("Notas: " + c.notas);
@@ -418,6 +479,7 @@ footer { font-size: .8rem; color: var(--muted); }
       : '<strong>' + esc(fmt(destino)) + '</strong><button class="btn ghost small" data-act="dest-edit">Cambiar número</button>';
     return '<section class="panel msgbox"><h2>Mandar mensaje</h2>' +
       '<div class="dest"><span class="lab">Enviar a</span>' + dest + '</div>' +
+      etaHTML() +
       '<label for="msg-text">Mensaje con los datos del cliente</label>' +
       '<textarea id="msg-text" spellcheck="true">' + esc(msgText) + '</textarea>' +
       '<div class="actions">' +
@@ -470,7 +532,10 @@ footer { font-size: .8rem; color: var(--muted); }
       box.innerHTML = listHTML();
     } else if (mode === "found") {
       var cur = clients.get(key);
-      if (msgFor !== key || msgText == null) { msgText = tpl(cur); msgFor = key; }
+      if (msgFor !== key || msgText == null) {
+        if (msgFor && msgFor !== key) { etaVal = ""; etaUnit = "min"; }
+        msgText = setEtaLine(tpl(cur)); msgFor = key;
+      }
       box.innerHTML = fichaHTML(cur) + msgHTML();
     } else if (mode === "notfound") {
       box.innerHTML = '<div class="panel nf"><span class="chip warn">No registrado</span>' +
@@ -583,7 +648,7 @@ footer { font-size: .8rem; color: var(--muted); }
   }
   function refresh() {
     var ae = document.activeElement && document.activeElement.id;
-    if (mode !== "form" && ae !== "msg-text" && ae !== "dest-input") renderBuscar();
+    if (mode !== "form" && ae !== "msg-text" && ae !== "dest-input" && ae !== "eta-input") renderBuscar();
     renderStats(); renderTodos(); renderResumen();
   }
 
@@ -633,7 +698,7 @@ footer { font-size: .8rem; color: var(--muted); }
           save: function (c) { clients.set(c.tel, c); localSave(); return Promise.resolve(); },
           remove: function (k) { clients.delete(k); localSave(); return Promise.resolve(); }
         };
-        $("#source").textContent = "Los datos se guardan solo en este navegador.";
+        $("#source").textContent = "Los clientes se guardan solo en este dispositivo. Para verlos en otro, usa Respaldo en este y Restaurar en el otro (pestaña Todos).";
         ready = true; refresh();
       }
     });
@@ -715,6 +780,13 @@ footer { font-size: .8rem; color: var(--muted); }
     else if (a === "edit") { editing = true; formVals = Object.assign({}, clients.get(key)); formErr = ""; mode = "form"; renderBuscar(); }
     else if (a === "cancel") { mode = (editing && clients.has(key)) ? "found" : "notfound"; editing = false; renderBuscar(); }
     else if (a === "clear") { mode = "idle"; key = ""; matches = []; $("#phone").value = ""; renderBuscar(); $("#phone").focus(); }
+    else if (a === "eta-unit") { etaUnit = b.dataset.u; syncEta(); }
+    else if (a === "eta-chip") {
+      var mm = +b.dataset.m;
+      if (mm < 60) { etaUnit = "min"; etaVal = String(mm); } else { etaUnit = "h"; etaVal = String(mm / 60); }
+      syncEta();
+    }
+    else if (a === "eta-clear") { etaVal = ""; syncEta(); var ei = $("#eta-input"); if (ei) ei.focus(); }
     else if (a === "dest-edit") { editDest = true; renderBuscar(); var di = $("#dest-input"); if (di) { di.focus(); di.select(); } }
     else if (a === "dest-cancel") { editDest = false; renderBuscar(); }
     else if (a === "dest-save") {
@@ -745,6 +817,7 @@ footer { font-size: .8rem; color: var(--muted); }
   $("#result").addEventListener("input", function (e) {
     var t = e.target;
     if (t.id === "msg-text") { msgText = t.value; updateWa(); }
+    else if (t.id === "eta-input") { etaVal = t.value.replace(/[^0-9.,]/g, ""); if (etaVal !== t.value) t.value = etaVal; syncEta(true); }
     else if (t.id === "f-colonia") {
       var hit = COLMAP[plain(t.value.trim())], cp = $("#f-cp");
       if (hit && cp && (!cp.value || cp.dataset.auto === "1")) { cp.value = hit.cp; cp.dataset.auto = "1"; }
