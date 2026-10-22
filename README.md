@@ -7,7 +7,7 @@ Página web de una sola pieza (`index.html`, sin instalar nada) para guardar y b
 - Colonias de Culiacán con código postal automático.
 - Pestaña **Todos** con la base de datos completa, filtros y exportar a Excel (CSV).
 - Pestaña **Resumen** con estadísticas.
-- Botón para mandar los datos del cliente por WhatsApp al número que elijas.
+- Botón para mandar los datos del cliente por WhatsApp al número que elijas, con un campo para escribir en cuánto tiempo estará el producto.
 - Se ve bien en celular, tablet y laptop.
 
 ## Cómo publicarla en GitHub Pages
@@ -26,7 +26,7 @@ Cuando subas una versión nueva, ábrela dos veces para que se actualice.
 
 ## Dónde se guardan los datos
 
-Los clientes se guardan en el navegador de cada dispositivo (localStorage). Eso significa que el celular y la laptop **no comparten** la lista automáticamente.
+Los clientes se guardan en el navegador de cada dispositivo (localStorage). Eso significa que el celular y la laptop **no comparten** la lista automáticamente: si registras un cliente en la laptop, no aparece en el celular hasta que lo pases con Respaldo y Restaurar.
 
 Para pasar los clientes de un dispositivo a otro usa los botones **Respaldo** (descarga un archivo .json) y **Restaurar** (lo carga en el otro dispositivo).
 
